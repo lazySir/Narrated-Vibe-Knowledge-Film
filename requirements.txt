@@ -1,0 +1,6 @@
+numpy
+Pillow
+playwright
+PyYAML
+scipy
+soundfile

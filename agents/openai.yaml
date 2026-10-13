@@ -1,0 +1,8 @@
+interface:
+  display_name: "旁白版 Vibe 知识短片"
+  short_description: "生成夜曲或寓言风格的可商用旁白知识视频"
+  brand_color: "#0B1830"
+  default_prompt: "使用 $narrated-vibe-knowledge-film 把我的选题做成带旁白的 30 秒样片。"
+
+policy:
+  allow_implicit_invocation: true

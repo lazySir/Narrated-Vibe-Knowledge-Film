@@ -1,0 +1,31 @@
+# Generated films and working projects
+/成品/
+/projects/
+/work/
+
+# Local runtimes, models, and secrets
+/.venv/
+/.venv-chattts/
+/.runtime/
+/.cache/
+/.env
+/models/
+/engine/fonts/*.ttf
+
+# Temporary upstream checkout used while maintaining this fork
+/_upstream_source/
+
+# Render and Python caches
+**/renders/
+**/review/
+**/audio/voice/
+**/audio/*.wav
+**/audio/*.mp3
+**/__pycache__/
+*.pyc
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
