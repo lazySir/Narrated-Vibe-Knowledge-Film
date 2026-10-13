@@ -97,10 +97,13 @@ class CosyVoice3Backend:
         if not prompt_wav.is_absolute():
             prompt_wav = (profile_path.parent if profile_path else project) / prompt_wav
         prompt_text = str(effective_cfg.get("prompt_text", "")).strip()
+        instruction = str(effective_cfg.get("instruction", "")).strip()
         if not repo.exists() or not model_dir.exists():
             raise SystemExit("CosyVoice3 尚未安装。请先运行 scripts/setup-cosyvoice3.ps1。")
-        if not prompt_wav.exists() or not prompt_text:
-            raise SystemExit("CosyVoice3 需要 prompt_wav 和逐字对应的 prompt_text。请使用你拥有声音权利的参考录音。")
+        if not prompt_wav.exists():
+            raise SystemExit("CosyVoice3 找不到参考录音 prompt_wav。请使用你拥有声音权利的参考录音。")
+        if not instruction and not prompt_text:
+            raise SystemExit("CosyVoice3 零样本模式需要与参考录音逐字对应的 prompt_text。")
         if effective_cfg.get("rights_confirmed") is not True:
             raise SystemExit("固定音色档案的 rights_confirmed 不是 true；无法确认参考声音可用于商业项目。")
         device = str(effective_cfg.get("device", "gpu")).lower()

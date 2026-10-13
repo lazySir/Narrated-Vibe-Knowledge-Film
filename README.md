@@ -74,6 +74,9 @@ CosyVoice3 模型首次使用时需要下载。GTX 1650 Ti 4GB 属于 FP16 推�
 并在确认拥有商业使用权后设置 `rights_confirmed: true`。这份固定音色档案会被以后
 所有影片复用，无需每部重新录音；`voices/` 默认不会提交到 GitHub。
 
+默认的 `inference_instruct2` 风格指令模式不依赖参考录音逐字稿；只有清空项目的
+`instruction`、改用零样本模式时，才必须填写完全一致的 `prompt_text`。
+
 生成旁白并创建时间轴：
 
 ```powershell
