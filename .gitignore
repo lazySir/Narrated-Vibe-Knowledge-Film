@@ -2,6 +2,7 @@
 /成品/
 /projects/
 /work/
+/voices/
 
 # Local runtimes, models, and secrets
 /.venv/

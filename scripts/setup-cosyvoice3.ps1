@@ -54,5 +54,5 @@ snapshot_download('FunAudioLLM/Fun-CosyVoice3-0.5B-2512', local_dir=sys.argv[1])
     if ($LASTEXITCODE -ne 0) { throw '下载 CosyVoice3 模型失败。' }
 }
 
-Write-Host 'CosyVoice3 已安装。请把有商业使用权的参考录音放入项目 voices/narrator-reference.wav，并填写逐字稿。'
+Write-Host 'CosyVoice3 已安装。首次使用时请建立 voices/narrator.json 和一次性参考录音，以后所有影片复用。'
 Write-Host '生成命令：.venv-cosyvoice3/Scripts/python.exe scripts/tts_generate.py <项目> --provider cosyvoice3'

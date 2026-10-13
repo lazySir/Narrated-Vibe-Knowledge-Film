@@ -26,7 +26,9 @@ and sound all share one timeline. Deliver a project folder and a numbered MP4 in
 1. Treat monetized Douyin publication as `usage: commercial`.
 2. Use CosyVoice3 locally by default. Its code and official
    `Fun-CosyVoice3-0.5B-2512` weights are Apache-2.0, but the reference voice
-   must be self-recorded or separately cleared for commercial use.
+   must be self-recorded or separately cleared for commercial use. Keep one
+   rights-documented profile in `voices/narrator.json` and reuse it across
+   films; do not request a new recording for every project.
 3. Do not assume that an API, model, voice clone, image, font, music track, or
    sound effect permits commercial use. Record the source and license in
    `license-manifest.json` before final render.
@@ -71,8 +73,9 @@ hope that timing remains stable.
 
 For commercial work, use `cosyvoice3`, `openai-compatible`, or another adapter
 whose model and voice rights have been verified. CosyVoice3 must refuse a
-project whose reference voice is missing or whose `rights_confirmed` value is
-not true.
+project whose global reference profile is missing or whose `rights_confirmed`
+value is not true. The default profile path is `voices/narrator.json` relative
+to the skill root.
 
 ### 4. Lock the timeline
 

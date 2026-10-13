@@ -76,21 +76,34 @@ def openai_compatible(text: str, output: Path, voice_cfg: dict) -> None:
 class CosyVoice3Backend:
     def __init__(self, project: Path, voice_cfg: dict):
         root = Path(os.path.abspath(__file__)).parent.parent
+        effective_cfg = dict(voice_cfg)
+        profile_path = None
+        if voice_cfg.get("voice_profile"):
+            profile_path = Path(str(voice_cfg["voice_profile"]))
+            if not profile_path.is_absolute():
+                profile_path = root / profile_path
+            if not profile_path.exists():
+                raise SystemExit(
+                    f"找不到固定旁白音色档案：{profile_path}。请复制 references/narrator.example.json "
+                    "到 voices/narrator.json，并放入一次性参考录音。"
+                )
+            profile_cfg = load_json(profile_path)
+            effective_cfg = {**profile_cfg, **voice_cfg}
         repo = root / ".runtime/CosyVoice"
-        model_dir = Path(voice_cfg.get("model_dir") or root / "models/Fun-CosyVoice3-0.5B-2512")
+        model_dir = Path(effective_cfg.get("model_dir") or root / "models/Fun-CosyVoice3-0.5B-2512")
         if not model_dir.is_absolute():
             model_dir = root / model_dir
-        prompt_wav = Path(voice_cfg.get("prompt_wav", ""))
+        prompt_wav = Path(effective_cfg.get("prompt_wav", ""))
         if not prompt_wav.is_absolute():
-            prompt_wav = project / prompt_wav
-        prompt_text = str(voice_cfg.get("prompt_text", "")).strip()
+            prompt_wav = (profile_path.parent if profile_path else project) / prompt_wav
+        prompt_text = str(effective_cfg.get("prompt_text", "")).strip()
         if not repo.exists() or not model_dir.exists():
             raise SystemExit("CosyVoice3 尚未安装。请先运行 scripts/setup-cosyvoice3.ps1。")
         if not prompt_wav.exists() or not prompt_text:
             raise SystemExit("CosyVoice3 需要 prompt_wav 和逐字对应的 prompt_text。请使用你拥有声音权利的参考录音。")
-        if voice_cfg.get("rights_confirmed") is not True:
-            raise SystemExit("voice.json 的 rights_confirmed 不是 true；无法确认参考声音可用于当前项目。")
-        device = str(voice_cfg.get("device", "gpu")).lower()
+        if effective_cfg.get("rights_confirmed") is not True:
+            raise SystemExit("固定音色档案的 rights_confirmed 不是 true；无法确认参考声音可用于商业项目。")
+        device = str(effective_cfg.get("device", "gpu")).lower()
         if device == "cpu":
             os.environ["CUDA_VISIBLE_DEVICES"] = ""
         sys.path.insert(0, str(repo))
@@ -103,11 +116,13 @@ class CosyVoice3Backend:
         self.torch = torch
         self.model = AutoModel(
             model_dir=str(model_dir),
-            fp16=bool(voice_cfg.get("fp16", True) and device != "cpu"),
+            fp16=bool(effective_cfg.get("fp16", True) and device != "cpu"),
         )
         self.prompt_wav = str(prompt_wav)
         self.prompt_text = "You are a helpful assistant.<|endofprompt|>" + prompt_text
-        self.voice_cfg = voice_cfg
+        self.voice_cfg = effective_cfg
+        self.profile_path = str(profile_path) if profile_path else ""
+        self.rights_confirmed = effective_cfg.get("rights_confirmed") is True
 
     def generate(self, text: str, output: Path) -> None:
         import soundfile as sf
@@ -180,8 +195,9 @@ def main() -> None:
         "preview_only": bool(args.preview_only),
         "model": voice_cfg.get("model") or os.getenv("TTS_MODEL", ""),
         "voice": voice_cfg.get("voice") or os.getenv("TTS_VOICE", ""),
-        "prompt_wav": voice_cfg.get("prompt_wav", "") if provider == "cosyvoice3" else "",
-        "rights_confirmed": voice_cfg.get("rights_confirmed", False) if provider == "cosyvoice3" else None,
+        "voice_profile": backend.profile_path if provider == "cosyvoice3" else "",
+        "prompt_wav": backend.prompt_wav if provider == "cosyvoice3" else "",
+        "rights_confirmed": backend.rights_confirmed if provider == "cosyvoice3" else None,
         "generated": generated,
     }
     (project / "audio/generation.json").write_text(

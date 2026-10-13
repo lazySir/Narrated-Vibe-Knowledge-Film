@@ -68,7 +68,11 @@ CosyVoice3 模型首次使用时需要下载。GTX 1650 Ti 4GB 属于 FP16 推�
 ./.venv/Scripts/python.exe scripts/new_project.py "标题" --world C --usage commercial
 ```
 
-在项目的 `narration.json` 中填写旁白句子。把一段干净、单人、普通话参考录音放进 `voices/narrator-reference.wav`，在 `voice.json` 填写完全一致的逐字稿，并在确认拥有商业使用权后设置 `rights_confirmed: true`。
+在项目的 `narration.json` 中填写旁白句子。第一次使用时，把
+`references/narrator.example.json` 复制为 `voices/narrator.json`，把一段干净、
+单人、普通话参考录音放进 `voices/narrator-reference.wav`，填写完全一致的逐字稿，
+并在确认拥有商业使用权后设置 `rights_confirmed: true`。这份固定音色档案会被以后
+所有影片复用，无需每部重新录音；`voices/` 默认不会提交到 GitHub。
 
 生成旁白并创建时间轴：
 

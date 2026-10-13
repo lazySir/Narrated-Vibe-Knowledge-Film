@@ -62,6 +62,11 @@ def main() -> None:
     (project / "audio/voice").mkdir(parents=True, exist_ok=True)
     (project / "renders").mkdir(exist_ok=True)
     (project / "generated_subs.js").write_text("window.GENERATED_SUBS = [];\n", encoding="utf-8")
+    voice_profile_path = ROOT / "voices/narrator.json"
+    voice_profile = {}
+    if voice_profile_path.exists():
+        voice_profile = json.loads(voice_profile_path.read_text(encoding="utf-8"))
+    voice_rights_ready = voice_profile.get("rights_confirmed") is True
 
     dump(project / "project.json", {
         "sequence": number,
@@ -76,10 +81,8 @@ def main() -> None:
         "provider": "cosyvoice3",
         "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
         "model_dir": "models/Fun-CosyVoice3-0.5B-2512",
-        "prompt_wav": "voices/narrator-reference.wav",
-        "prompt_text": "",
+        "voice_profile": "voices/narrator.json",
         "voice": "project-owned-reference",
-        "rights_confirmed": False,
         "device": "gpu",
         "fp16": True,
         "speed": 1.0,
@@ -91,9 +94,9 @@ def main() -> None:
             "kind": "tts",
             "name": "CosyVoice3 0.5B + 项目自有参考声音",
             "source": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
-            "license": "Apache-2.0；参考声音必须由项目方拥有或取得商业授权",
-            "checked_on": "",
-            "status": "unverified",
+            "license": "Apache-2.0；" + str(voice_profile.get("rights_note", "参考声音必须由项目方拥有或取得商业授权")),
+            "checked_on": date.today().isoformat() if voice_rights_ready else "",
+            "status": "approved" if voice_rights_ready else "unverified",
         }],
     })
     (project / "facts.md").write_text("# 事实表\n\n| 事实 | 来源 | 把握 | 用在何处 |\n|---|---|---|---|\n", encoding="utf-8")

@@ -95,8 +95,10 @@ projects/001_标题/
 ```
 
 脚本逐句写入 `audio/voice/NNN.wav`。已有且非空的文件默认跳过，使用
-`--force` 才覆盖。参考声音放在项目 `voices/` 中，`prompt_text` 必须与录音逐字一致，
-并设置 `rights_confirmed: true`。4GB 显存默认使用 FP16；显存不足时将 `device` 改为 `cpu`。
+`--force` 才覆盖。固定参考声音放在仓库根目录 `voices/` 中，
+`voices/narrator.json` 的 `prompt_text` 必须与录音逐字一致，并设置
+`rights_confirmed: true`。所有影片默认复用这一个音色档案。4GB 显存默认使用 FP16；
+显存不足时将 `device` 改为 `cpu`。
 
 ## 时间轴
 
