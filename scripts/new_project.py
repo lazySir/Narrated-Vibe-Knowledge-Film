@@ -83,8 +83,8 @@ def main() -> None:
         "model_dir": "models/Fun-CosyVoice3-0.5B-2512",
         "voice_profile": "voices/narrator.json",
         "voice": "project-owned-reference",
-        "device": "gpu",
-        "fp16": True,
+        "device": "cpu",
+        "fp16": False,
         "speed": 1.0,
         "instruction": "请用平静、清楚、有探索感的普通话讲述，自然停顿，避免广告腔和夸张播音腔。",
     })

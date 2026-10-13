@@ -52,7 +52,9 @@ projects/              每条片的工作工程（默认忽略）
 ./scripts/setup-cosyvoice3.ps1
 ```
 
-CosyVoice3 模型首次使用时需要下载。GTX 1650 Ti 4GB 属于 FP16 推理下限，流程默认逐句生成；若显存不足，把项目 `voice.json` 的 `device` 改成 `cpu`。
+CosyVoice3 模型首次使用时需要下载。本机 GTX 1650 Ti 4GB 虽能加载 FP16 模型，
+但实测可能生成非有限数值并形成无声直流轨，因此项目默认使用 CPU/FP32 逐句生成。
+生成器会拒绝非有限数值和全静音结果，避免坏音频进入成片。
 
 机器还需要 Google Chrome 和 FFmpeg。运行环境检查：
 

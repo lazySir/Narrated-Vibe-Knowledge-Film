@@ -143,7 +143,16 @@ class CosyVoice3Backend:
         chunks = [item["tts_speech"].detach().cpu() for item in stream]
         if not chunks:
             raise RuntimeError("CosyVoice3 没有返回音频。")
-        wav = self.torch.cat(chunks, dim=1).squeeze(0).numpy()
+        wav_tensor = self.torch.cat(chunks, dim=1).squeeze(0).float()
+        if not self.torch.isfinite(wav_tensor).all():
+            raise RuntimeError(
+                "CosyVoice3 返回了无效音频数值。GTX 1650 Ti 的 FP16 路径可能不稳定；"
+                "请把 voice.json 的 device 改为 cpu 后重试。"
+            )
+        peak = float(wav_tensor.abs().max()) if wav_tensor.numel() else 0.0
+        if peak == 0.0:
+            raise RuntimeError("CosyVoice3 返回了全静音音频。")
+        wav = wav_tensor.numpy()
         sf.write(output, wav, self.model.sample_rate, subtype="PCM_16")
 
 

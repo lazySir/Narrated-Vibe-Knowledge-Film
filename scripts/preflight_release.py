@@ -5,10 +5,35 @@ import os
 import sys
 from pathlib import Path
 
+import numpy as np
+import soundfile as sf
+
 ALLOWED = {"approved", "original", "public-domain"}
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
+
+
+def inspect_wav(path: Path, label: str):
+    if not path.exists():
+        return [f"缺少 {label}：{path.name}"]
+    try:
+        audio, _ = sf.read(path, dtype="float32")
+    except Exception as exc:
+        return [f"{label} 无法读取：{exc}"]
+    if audio.size == 0:
+        return [f"{label} 是空音频"]
+    errors = []
+    if not np.isfinite(audio).all():
+        errors.append(f"{label} 含有非有限采样值")
+    finite_audio = np.nan_to_num(audio)
+    peak = float(np.max(np.abs(finite_audio)))
+    dc = float(np.mean(finite_audio))
+    if peak < 1e-5:
+        errors.append(f"{label} 是全静音音频")
+    if abs(dc) > 0.05:
+        errors.append(f"{label} 存在异常直流偏移 {dc:.3f}")
+    return errors
 
 
 def inspect(project: Path, require_video=True):
@@ -43,8 +68,11 @@ def inspect(project: Path, require_video=True):
     for required in ("facts.md", "storyboard.md", "timeline.json", "subtitles.srt"):
         if not (project / required).exists():
             errors.append(f"缺少 {required}")
-    if require_video and not (project / "renders/final.mp4").exists():
-        errors.append("缺少 renders/final.mp4")
+    errors.extend(inspect_wav(project / "audio/narration.wav", "旁白总轨"))
+    if require_video:
+        errors.extend(inspect_wav(project / "audio/score.wav", "背景音乐与事件音轨"))
+        if not (project / "renders/final.mp4").exists():
+            errors.append("缺少 renders/final.mp4")
     return errors
 
 

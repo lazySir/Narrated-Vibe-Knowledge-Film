@@ -31,7 +31,7 @@ def main() -> None:
     background_indices = []
     if score.exists():
         cmd += ["-i", str(score)]
-        background_indices.append((2, -7.0))
+        background_indices.append((2, -4.5))
     if args.bgm:
         if not args.bgm.exists():
             raise SystemExit(f"找不到 BGM：{args.bgm}")
@@ -39,7 +39,7 @@ def main() -> None:
         background_indices.append((2 + int(score.exists()), args.bgm_db))
 
     if background_indices:
-        pieces = []
+        pieces = ["[1:a]aformat=channel_layouts=stereo,asplit=2[voice_sc][voice_mix]"]
         labels = []
         for n, (index, gain) in enumerate(background_indices):
             pieces.append(f"[{index}:a]volume={gain}dB[bg{n}]")
@@ -48,16 +48,16 @@ def main() -> None:
             pieces.append("".join(labels) + f"amix=inputs={len(labels)}:normalize=0[bg]")
         else:
             pieces.append(f"{labels[0]}anull[bg]")
-        pieces.append("[bg][1:a]sidechaincompress=threshold=0.02:ratio=10:attack=15:release=350[ducked]")
-        pieces.append("[1:a][ducked]amix=inputs=2:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[a]")
+        pieces.append("[bg][voice_sc]sidechaincompress=threshold=0.025:ratio=6:attack=20:release=450[ducked]")
+        pieces.append("[voice_mix][ducked]amix=inputs=2:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[a]")
         filter_graph = ";".join(pieces)
     else:
-        filter_graph = "[1:a]loudnorm=I=-14:TP=-1.5:LRA=11[a]"
+        filter_graph = "[1:a]aformat=channel_layouts=stereo,loudnorm=I=-14:TP=-1.5:LRA=11[a]"
 
     cmd += [
         "-filter_complex", filter_graph,
         "-map", "0:v", "-map", "[a]",
-        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2",
         "-shortest", "-movflags", "+faststart", str(output),
     ]
     subprocess.run(cmd, check=True)

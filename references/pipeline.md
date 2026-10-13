@@ -98,8 +98,8 @@ projects/001_标题/
 `--force` 才覆盖。固定参考声音放在仓库根目录 `voices/` 中，
 `voices/narrator.json` 必须设置 `rights_confirmed: true`。默认 instruct2 模式不读取
 逐字稿；改用零样本模式时，`prompt_text` 必须与录音逐字一致。所有影片默认复用
-这一个音色档案。4GB 显存默认使用 FP16；
-显存不足时将 `device` 改为 `cpu`。
+这一个音色档案。本机 GTX 1650 Ti 4GB 默认使用 CPU/FP32；FP16 输出会进行
+非有限数值和全静音检查，检测到坏音频时立即停止。
 
 ## 时间轴
 
