@@ -17,15 +17,17 @@ license does not grant republication rights to the referenced film content:
 - reference-film subtitles and shot descriptions in `references/visualization.md`
 - `examples/stim_B`, `examples/info_C`, and all upstream example media
 
-## ChatTTS
+## CosyVoice3
 
-ChatTTS is an optional local preview dependency. Its code is AGPL-3.0-or-later,
-and the official released model is CC BY-NC 4.0. The official model must not be
-used for monetized Douyin videos or other commercial output. It is not bundled
-in this repository and is downloaded only when a user explicitly installs it.
+CosyVoice is installed optionally from the official
+[`QwenAudio/CosyVoice`](https://github.com/QwenAudio/CosyVoice) repository. The
+source code and the official `FunAudioLLM/Fun-CosyVoice3-0.5B-2512` model page
+declare the Apache License 2.0. Neither the source nor the model weights are
+redistributed by this repository.
 
-The project blocks ChatTTS when a production manifest declares
-`usage: commercial`. This check does not replace review of the upstream license.
+Reference recordings are separate assets. Users must own them or have explicit
+permission for the intended commercial use. Official demo audio and third-party
+voices are not bundled and must not be treated as commercially cleared.
 
 ## Fonts and FFmpeg
 

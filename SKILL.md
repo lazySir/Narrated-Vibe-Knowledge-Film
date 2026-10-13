@@ -24,8 +24,9 @@ and sound all share one timeline. Deliver a project folder and a numbered MP4 in
 ## Non-negotiable rules
 
 1. Treat monetized Douyin publication as `usage: commercial`.
-2. Never use the official ChatTTS model in commercial output. It is CC BY-NC
-   4.0. ChatTTS may generate an explicitly marked local preview only.
+2. Use CosyVoice3 locally by default. Its code and official
+   `Fun-CosyVoice3-0.5B-2512` weights are Apache-2.0, but the reference voice
+   must be self-recorded or separately cleared for commercial use.
 3. Do not assume that an API, model, voice clone, image, font, music track, or
    sound effect permits commercial use. Record the source and license in
    `license-manifest.json` before final render.
@@ -68,10 +69,10 @@ Generate one audio file per sentence. Reuse one documented voice throughout a
 film. Retry only defective sentences. Do not concatenate the whole script and
 hope that timing remains stable.
 
-For commercial work, use `openai-compatible` or another adapter whose provider,
-model, voice, and subscription terms the user has confirmed permit monetized
-video. For ChatTTS, require `--preview-only`; the script must refuse a project
-whose manifest declares commercial usage.
+For commercial work, use `cosyvoice3`, `openai-compatible`, or another adapter
+whose model and voice rights have been verified. CosyVoice3 must refuse a
+project whose reference voice is missing or whose `rights_confirmed` value is
+not true.
 
 ### 4. Lock the timeline
 

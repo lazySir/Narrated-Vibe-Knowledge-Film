@@ -5,7 +5,7 @@
 
 # Local runtimes, models, and secrets
 /.venv/
-/.venv-chattts/
+/.venv-cosyvoice3/
 /.runtime/
 /.cache/
 /.env

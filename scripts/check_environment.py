@@ -31,7 +31,10 @@ def main() -> None:
     print(f"FFmpeg: {yes(ffmpeg)}")
     for package in ("numpy", "scipy", "PIL", "playwright", "soundfile"):
         print(f"{package}: {yes(importlib.util.find_spec(package))}")
-    print(f"ChatTTS (preview only): {yes(importlib.util.find_spec('ChatTTS'))}")
+    cosy_repo = ROOT / ".runtime/CosyVoice"
+    cosy_model = ROOT / "models/Fun-CosyVoice3-0.5B-2512"
+    print(f"CosyVoice3 code: {yes(cosy_repo.exists())}")
+    print(f"CosyVoice3 model: {yes(cosy_model.exists())}")
     nvidia = shutil.which("nvidia-smi")
     if nvidia:
         result = subprocess.run(

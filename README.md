@@ -13,7 +13,7 @@
 
 你可以把本仓库生成的视频用于抖音变现，但每个外部素材和语音模型必须另行允许商业使用。
 
-ChatTTS 官方模型采用 CC BY-NC 4.0，只能用于本地试音或非商业样片。正式发布时请配置一个明确允许商业使用的 TTS 服务。本项目在 `usage: commercial` 时会拒绝调用 ChatTTS，防止误发布。
+默认旁白使用本地 `Fun-CosyVoice3-0.5B-2512`。官方代码和模型权重均标为 Apache 2.0，可用于商业工作流；参考声音仍必须由你本人录制，或另行取得商业授权。项目会在没有确认参考声音权利时阻止发布。
 
 完整说明见 [商业发布清单](references/commercial-release.md) 和
 [第三方声明](THIRD_PARTY_NOTICES.md)。
@@ -46,13 +46,13 @@ projects/              每条片的工作工程（默认忽略）
 ./scripts/setup.ps1
 ```
 
-它会建立项目虚拟环境并安装动画引擎依赖。安装 ChatTTS 试音环境：
+它会建立项目虚拟环境并安装动画引擎依赖。安装 CosyVoice3 本地配音环境：
 
 ```powershell
-./scripts/setup-chattts.ps1
+./scripts/setup-cosyvoice3.ps1
 ```
 
-ChatTTS 模型首次使用时需要下载，至少约 4GB 显存；本机 4GB 显存属于最低边缘配置，脚本默认关闭编译并逐句生成。
+CosyVoice3 模型首次使用时需要下载。GTX 1650 Ti 4GB 属于 FP16 推理下限，流程默认逐句生成；若显存不足，把项目 `voice.json` 的 `device` 改成 `cpu`。
 
 机器还需要 Google Chrome 和 FFmpeg。运行环境检查：
 
@@ -68,12 +68,12 @@ ChatTTS 模型首次使用时需要下载，至少约 4GB 显存；本机 4GB �
 ./.venv/Scripts/python.exe scripts/new_project.py "标题" --world C --usage commercial
 ```
 
-在项目的 `narration.json` 中填写旁白句子。商业 TTS 使用 `.env` 中的 OpenAI 兼容接口；供应商和声音的商业授权由你确认，并记录到项目的 `license-manifest.json`。
+在项目的 `narration.json` 中填写旁白句子。把一段干净、单人、普通话参考录音放进 `voices/narrator-reference.wav`，在 `voice.json` 填写完全一致的逐字稿，并在确认拥有商业使用权后设置 `rights_confirmed: true`。
 
 生成旁白并创建时间轴：
 
 ```powershell
-./.venv/Scripts/python.exe scripts/tts_generate.py projects/001_标题 --provider openai-compatible
+./.venv-cosyvoice3/Scripts/python.exe scripts/tts_generate.py projects/001_标题 --provider cosyvoice3
 ./.venv/Scripts/python.exe scripts/build_timeline.py projects/001_标题
 ```
 
@@ -87,10 +87,10 @@ ChatTTS 模型首次使用时需要下载，至少约 4GB 显存；本机 4GB �
 ./.venv/Scripts/python.exe scripts/archive_final.py projects/001_标题 --title "标题"
 ```
 
-使用 ChatTTS 做非商业试音：
+也可以使用经过商业授权的 OpenAI 兼容语音接口：
 
 ```powershell
-./.venv-chattts/Scripts/python.exe scripts/tts_generate.py projects/001_标题 --provider chattts --preview-only
+./.venv/Scripts/python.exe scripts/tts_generate.py projects/001_标题 --provider openai-compatible
 ```
 
 ## 发布到 GitHub

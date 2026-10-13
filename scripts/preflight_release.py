@@ -33,8 +33,8 @@ def inspect(project: Path, require_video=True):
     generation = project / "audio/generation.json"
     if generation.exists():
         record = json.loads(generation.read_text(encoding="utf-8"))
-        if usage == "commercial" and record.get("provider") == "chattts":
-            errors.append("商业工程检测到 ChatTTS 旁白记录；该官方模型禁止商业使用")
+        if usage == "commercial" and record.get("provider") == "cosyvoice3" and record.get("rights_confirmed") is not True:
+            errors.append("CosyVoice3 的参考声音尚未确认拥有商业使用权")
         if usage == "commercial" and record.get("preview_only"):
             errors.append("商业工程仍在使用 preview-only 旁白")
     else:

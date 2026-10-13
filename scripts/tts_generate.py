@@ -38,11 +38,6 @@ def normalized(text: str, pronunciation: dict) -> str:
 def commercial_guard(project: Path, provider: str, preview_only: bool) -> str:
     manifest = load_json(project / "license-manifest.json")
     usage = manifest.get("usage", "commercial")
-    if provider == "chattts" and (usage == "commercial" or not preview_only):
-        raise SystemExit(
-            "拒绝生成：ChatTTS 官方模型是 CC BY-NC 4.0。商业工程只能把它用于明确标记的本地试音。"
-            "如需试音，请把项目 usage 改为 non-commercial 并加 --preview-only；正式成片请使用有商业授权的后端。"
-        )
     return usage
 
 
@@ -78,46 +73,66 @@ def openai_compatible(text: str, output: Path, voice_cfg: dict) -> None:
     temp.unlink()
 
 
-class ChatTTSBackend:
+class CosyVoice3Backend:
     def __init__(self, project: Path, voice_cfg: dict):
+        root = Path(os.path.abspath(__file__)).parent.parent
+        repo = root / ".runtime/CosyVoice"
+        model_dir = Path(voice_cfg.get("model_dir") or root / "models/Fun-CosyVoice3-0.5B-2512")
+        if not model_dir.is_absolute():
+            model_dir = root / model_dir
+        prompt_wav = Path(voice_cfg.get("prompt_wav", ""))
+        if not prompt_wav.is_absolute():
+            prompt_wav = project / prompt_wav
+        prompt_text = str(voice_cfg.get("prompt_text", "")).strip()
+        if not repo.exists() or not model_dir.exists():
+            raise SystemExit("CosyVoice3 尚未安装。请先运行 scripts/setup-cosyvoice3.ps1。")
+        if not prompt_wav.exists() or not prompt_text:
+            raise SystemExit("CosyVoice3 需要 prompt_wav 和逐字对应的 prompt_text。请使用你拥有声音权利的参考录音。")
+        if voice_cfg.get("rights_confirmed") is not True:
+            raise SystemExit("voice.json 的 rights_confirmed 不是 true；无法确认参考声音可用于当前项目。")
+        device = str(voice_cfg.get("device", "gpu")).lower()
+        if device == "cpu":
+            os.environ["CUDA_VISIBLE_DEVICES"] = ""
+        sys.path.insert(0, str(repo))
+        sys.path.insert(0, str(repo / "third_party/Matcha-TTS"))
         try:
-            import ChatTTS
+            import torch
+            from cosyvoice.cli.cosyvoice import AutoModel
         except ImportError as exc:
-            raise SystemExit("当前环境没有 ChatTTS。请先运行 scripts/setup-chattts.ps1。") from exc
-        self.ChatTTS = ChatTTS
-        self.chat = ChatTTS.Chat()
-        loaded = self.chat.load(source="huggingface", compile=False)
-        if not loaded:
-            raise SystemExit("ChatTTS 模型下载或加载失败。请检查网络和 .cache/huggingface 的可写权限。")
-        self.speaker_path = project / "audio/chattts-speaker.txt"
-        if self.speaker_path.exists():
-            self.speaker = self.speaker_path.read_text(encoding="utf-8").strip()
-        else:
-            self.speaker = self.chat.sample_random_speaker()
-            if not isinstance(self.speaker, str):
-                raise SystemExit("当前 ChatTTS 版本未返回可持久化的 speaker 字符串，请固定兼容版本后重试。")
-            self.speaker_path.write_text(self.speaker, encoding="utf-8")
+            raise SystemExit("当前环境没有 CosyVoice3。请用 .venv-cosyvoice3 运行本脚本。") from exc
+        self.torch = torch
+        self.model = AutoModel(
+            model_dir=str(model_dir),
+            fp16=bool(voice_cfg.get("fp16", True) and device != "cpu"),
+        )
+        self.prompt_wav = str(prompt_wav)
+        self.prompt_text = "You are a helpful assistant.<|endofprompt|>" + prompt_text
         self.voice_cfg = voice_cfg
 
     def generate(self, text: str, output: Path) -> None:
         import soundfile as sf
-        params_code = self.ChatTTS.Chat.InferCodeParams(
-            spk_emb=self.speaker,
-            temperature=float(self.voice_cfg.get("temperature", 0.3)),
-            top_P=float(self.voice_cfg.get("top_P", 0.7)),
-            top_K=int(self.voice_cfg.get("top_K", 20)),
-        )
-        params_text = self.ChatTTS.Chat.RefineTextParams(
-            prompt=self.voice_cfg.get("chattts_prompt", "[oral_1][laugh_0][break_4]")
-        )
-        wavs = self.chat.infer([text], params_refine_text=params_text, params_infer_code=params_code)
-        sf.write(output, wavs[0], 24000, subtype="PCM_16")
+        instruction = str(self.voice_cfg.get("instruction", "")).strip()
+        speed = float(self.voice_cfg.get("speed", 1.0))
+        if instruction:
+            control = "You are a helpful assistant. " + instruction + "<|endofprompt|>"
+            stream = self.model.inference_instruct2(
+                text, control, self.prompt_wav, stream=False, speed=speed
+            )
+        else:
+            stream = self.model.inference_zero_shot(
+                text, self.prompt_text, self.prompt_wav, stream=False, speed=speed
+            )
+        chunks = [item["tts_speech"].detach().cpu() for item in stream]
+        if not chunks:
+            raise RuntimeError("CosyVoice3 没有返回音频。")
+        wav = self.torch.cat(chunks, dim=1).squeeze(0).numpy()
+        sf.write(output, wav, self.model.sample_rate, subtype="PCM_16")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="逐句生成旁白")
     parser.add_argument("project", type=Path)
-    parser.add_argument("--provider", choices=["openai-compatible", "chattts"])
+    parser.add_argument("--provider", choices=["openai-compatible", "cosyvoice3"])
     parser.add_argument("--preview-only", action="store_true")
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
@@ -127,6 +142,9 @@ def main() -> None:
     os.environ.setdefault("HF_HOME", str(root / ".cache/huggingface"))
     os.environ.setdefault("TRANSFORMERS_CACHE", str(root / ".cache/huggingface/transformers"))
     os.environ.setdefault("TORCH_HOME", str(root / ".cache/torch"))
+    os.environ.setdefault("MPLCONFIGDIR", str(root / ".cache/matplotlib"))
+    for cache_dir in ("HF_HOME", "TRANSFORMERS_CACHE", "TORCH_HOME", "MPLCONFIGDIR"):
+        Path(os.environ[cache_dir]).mkdir(parents=True, exist_ok=True)
     load_dotenv(root / ".env")
     voice_cfg = load_json(project / "voice.json")
     provider = args.provider or voice_cfg.get("provider", "openai-compatible")
@@ -137,7 +155,7 @@ def main() -> None:
         raise SystemExit("narration.json 里没有旁白句子。")
     out_dir = project / "audio/voice"
     out_dir.mkdir(parents=True, exist_ok=True)
-    backend = ChatTTSBackend(project, voice_cfg) if provider == "chattts" else None
+    backend = CosyVoice3Backend(project, voice_cfg) if provider == "cosyvoice3" else None
 
     generated = []
     for index, item in enumerate(lines, 1):
@@ -150,7 +168,7 @@ def main() -> None:
             print(f"skip {output.name}")
             continue
         print(f"generate {output.name}: {text}", flush=True)
-        if provider == "chattts":
+        if provider == "cosyvoice3":
             backend.generate(text, output)
         else:
             openai_compatible(text, output, voice_cfg)
@@ -162,6 +180,8 @@ def main() -> None:
         "preview_only": bool(args.preview_only),
         "model": voice_cfg.get("model") or os.getenv("TTS_MODEL", ""),
         "voice": voice_cfg.get("voice") or os.getenv("TTS_VOICE", ""),
+        "prompt_wav": voice_cfg.get("prompt_wav", "") if provider == "cosyvoice3" else "",
+        "rights_confirmed": voice_cfg.get("rights_confirmed", False) if provider == "cosyvoice3" else None,
         "generated": generated,
     }
     (project / "audio/generation.json").write_text(

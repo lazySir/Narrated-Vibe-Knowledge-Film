@@ -73,21 +73,27 @@ def main() -> None:
     dump(project / "narration.json", {"lines": []})
     dump(project / "pronunciation.json", {})
     dump(project / "voice.json", {
-        "provider": "openai-compatible" if args.usage == "commercial" else "chattts",
-        "model": "",
-        "voice": "",
-        "response_format": "wav",
-        "instructions": "平静、清楚、有探索感。自然停顿，避免广告腔和夸张播音腔。",
+        "provider": "cosyvoice3",
+        "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+        "model_dir": "models/Fun-CosyVoice3-0.5B-2512",
+        "prompt_wav": "voices/narrator-reference.wav",
+        "prompt_text": "",
+        "voice": "project-owned-reference",
+        "rights_confirmed": False,
+        "device": "gpu",
+        "fp16": True,
+        "speed": 1.0,
+        "instruction": "请用平静、清楚、有探索感的普通话讲述，自然停顿，避免广告腔和夸张播音腔。",
     })
     dump(project / "license-manifest.json", {
         "usage": args.usage,
         "assets": [{
             "kind": "tts",
-            "name": "待配置的商业语音服务" if args.usage == "commercial" else "ChatTTS preview",
-            "source": "",
-            "license": "",
+            "name": "CosyVoice3 0.5B + 项目自有参考声音",
+            "source": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+            "license": "Apache-2.0；参考声音必须由项目方拥有或取得商业授权",
             "checked_on": "",
-            "status": "unverified" if args.usage == "commercial" else "non-commercial",
+            "status": "unverified",
         }],
     })
     (project / "facts.md").write_text("# 事实表\n\n| 事实 | 来源 | 把握 | 用在何处 |\n|---|---|---|---|\n", encoding="utf-8")

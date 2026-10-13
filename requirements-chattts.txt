@@ -1,3 +1,0 @@
-# ChatTTS is restricted to non-commercial previews by this project.
-ChatTTS
-soundfile
