@@ -15,7 +15,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="混合旁白、事件音和可选 BGM")
     parser.add_argument("project", type=Path)
     parser.add_argument("--bgm", type=Path)
-    parser.add_argument("--bgm-db", type=float, default=-16.0)
+    parser.add_argument("--bgm-db", type=float, default=-22.0,
+                        help="外部 BGM 增益；默认 -22 dB，避免盖住旁白")
+    parser.add_argument("--score-db", type=float, default=-12.0,
+                        help="合成背景音乐与事件音增益；默认 -12 dB")
     args = parser.parse_args()
     project = Path(os.path.abspath(args.project))
     raw = project / "renders/raw.mp4"
@@ -26,20 +29,30 @@ def main() -> None:
         raise SystemExit(f"缺少无声画面：{raw}")
     if not narration.exists():
         raise SystemExit(f"缺少旁白总轨：{narration}")
+    if not score.exists():
+        raise SystemExit(
+            f"缺少全程背景音乐：{score}。请先运行 engine/audio.py <工程> --wav-only。"
+        )
+    if args.bgm_db > -18:
+        raise SystemExit("为避免盖住旁白，--bgm-db 不能高于 -18 dB。建议保留默认 -22 dB。")
+    if args.score_db > -9:
+        raise SystemExit("为避免事件音和底乐盖住旁白，--score-db 不能高于 -9 dB。")
 
     cmd = [ffmpeg(), "-v", "error", "-y", "-i", str(raw), "-i", str(narration)]
     background_indices = []
-    if score.exists():
-        cmd += ["-i", str(score)]
-        background_indices.append((2, -4.5))
+    cmd += ["-i", str(score)]
+    background_indices.append((2, args.score_db))
     if args.bgm:
         if not args.bgm.exists():
             raise SystemExit(f"找不到 BGM：{args.bgm}")
         cmd += ["-stream_loop", "-1", "-i", str(args.bgm)]
-        background_indices.append((2 + int(score.exists()), args.bgm_db))
+        background_indices.append((3, args.bgm_db))
 
     if background_indices:
-        pieces = ["[1:a]aformat=channel_layouts=stereo,asplit=2[voice_sc][voice_mix]"]
+        pieces = [
+            "[1:a]aformat=channel_layouts=stereo,highpass=f=70,"
+            "loudnorm=I=-16:TP=-2:LRA=7,asplit=2[voice_sc][voice_mix]"
+        ]
         labels = []
         for n, (index, gain) in enumerate(background_indices):
             pieces.append(f"[{index}:a]volume={gain}dB[bg{n}]")
@@ -48,7 +61,11 @@ def main() -> None:
             pieces.append("".join(labels) + f"amix=inputs={len(labels)}:normalize=0[bg]")
         else:
             pieces.append(f"{labels[0]}anull[bg]")
-        pieces.append("[bg][voice_sc]sidechaincompress=threshold=0.025:ratio=6:attack=20:release=450[ducked]")
+        # 人声出现时背景平滑下压；停顿时缓慢回升，避免忽大忽小。
+        pieces.append(
+            "[bg][voice_sc]sidechaincompress="
+            "threshold=0.015:ratio=10:attack=15:release=650[ducked]"
+        )
         pieces.append("[voice_mix][ducked]amix=inputs=2:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[a]")
         filter_graph = ";".join(pieces)
     else:

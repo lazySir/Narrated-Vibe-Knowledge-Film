@@ -113,9 +113,11 @@ def synth(spec, bgm=False):
         g = np.clip((t - a) / max(.01, b - a), 0, 1) ** 1.5 * (t <= b) * k
         out += lowpass(highpass(rng.standard_normal((n, 2)), 200), 6000) * (g * .12)[:, None]
     g = np.ones(n)
-    for a, b in list(meta.get("silence", [])) + hush:  # 彻底静音：0.15s 收掉，0.4s 回来
-        g *= 1 - np.clip((t - a) / .15, 0, 1) * (1 - np.clip((t - b) / .4, 0, 1))
-    g *= np.clip(t / .6, 0, 1) * np.clip((end - t) / 1.2, 0, 1)
+    for a, b in list(meta.get("silence", [])) + hush:  # 只弱化，不抽掉底乐
+        dip = np.clip((t - a) / .15, 0, 1) * (1 - np.clip((t - b) / .4, 0, 1))
+        g *= 1 - .92 * dip
+    # 开头和结尾仍保留极弱的音乐床，避免突然出现或完全消失。
+    g *= .08 + .92 * np.clip(t / .6, 0, 1) * np.clip((end - t) / 1.2, 0, 1)
     out *= g[:, None]
     return out
 

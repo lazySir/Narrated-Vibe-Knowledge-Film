@@ -96,6 +96,10 @@ CosyVoice3 模型首次使用时需要下载。本机 GTX 1650 Ti 4GB 虽能加�
 ./.venv/Scripts/python.exe scripts/archive_final.py projects/001_标题 --title "标题"
 ```
 
+混音采用“小白安全默认值”：背景音乐覆盖全片，人声出现时自动降低，旁白停顿时
+只缓慢回升，不会突然变响。合成底乐保持简洁安静，外部 BGM 默认压得更低；正常使用
+不需要调整 dB、LUFS 或压缩器参数。
+
 也可以使用经过商业授权的 OpenAI 兼容语音接口：
 
 ```powershell

@@ -37,6 +37,9 @@ and sound all share one timeline. Deliver a project folder and a numbered MP4 in
    designs. Build every film from the user's topic and verified sources.
 6. Generate narration before locking the final shot timings. Measure the real
    audio durations and derive subtitle and scene boundaries from them.
+7. Keep a quiet background music bed present for the whole film. Narration is
+   always the foreground. Use sparse instrumental textures without vocals,
+   busy drums, harsh high frequencies, or dense competing melodies.
 
 ## Workflow
 
@@ -102,8 +105,19 @@ Fix visible or audible problems before extending the full film.
 Render deterministic picture with `engine/render.py`. Export sound events, then
 run `engine/audio.py <project> --wav-only` and use `scripts/mix_narration.py` to
 mix narration, event sound, and optional BGM.
-Speech is the reference layer; duck music beneath speech and keep true-peak
-headroom. Do not stretch narration merely to fit a pre-existing animation.
+Speech is the reference layer. Always generate `audio/score.wav`; do not deliver
+a narration-only film. Use the safe defaults in `mix_narration.py`: normalize
+speech first, keep the generated score low, keep optional BGM lower still, and
+duck all background layers smoothly whenever speech is present. During speech
+pauses the bed may rise gently but must not jump in level. A dramatic hush means
+very quiet background, not digital silence. Do not stretch narration merely to
+fit a pre-existing animation.
+
+Before delivery, listen to at least the opening, one dense explanatory section,
+and the ending on ordinary speakers or headphones. If any word becomes harder
+to understand, lower or simplify the background rather than boosting the whole
+mix. Do not ask a novice user to choose dB, LUFS, compressor, or limiter values;
+use the script defaults unless they explicitly request a different sound.
 
 ### 7. Commercial preflight and delivery
 

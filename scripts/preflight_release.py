@@ -2,11 +2,15 @@
 import argparse
 import json
 import os
+import re
+import subprocess
 import sys
 from pathlib import Path
 
 import numpy as np
 import soundfile as sf
+
+from runtime import ffmpeg
 
 ALLOWED = {"approved", "original", "public-domain"}
 
@@ -34,6 +38,36 @@ def inspect_wav(path: Path, label: str):
     if abs(dc) > 0.05:
         errors.append(f"{label} 存在异常直流偏移 {dc:.3f}")
     return errors
+
+
+def wav_duration(path: Path):
+    try:
+        info = sf.info(path)
+        return info.frames / info.samplerate if info.samplerate else 0.0
+    except Exception:
+        return 0.0
+
+
+def inspect_video_audio(path: Path):
+    if not path.exists():
+        return [f"缺少 {path.name}"]
+    result = subprocess.run(
+        [
+            ffmpeg(), "-hide_banner", "-nostats", "-i", str(path),
+            "-map", "0:a:0", "-af", "volumedetect", "-f", "null", "-",
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if result.returncode != 0:
+        return ["最终视频缺少可读取的音轨"]
+    match = re.search(r"mean_volume:\s*(-?inf|[-\d.]+) dB", result.stderr)
+    if not match or match.group(1) == "-inf" or float(match.group(1)) < -55:
+        return ["最终视频音轨接近静音"]
+    return []
 
 
 def inspect(project: Path, require_video=True):
@@ -71,8 +105,13 @@ def inspect(project: Path, require_video=True):
     errors.extend(inspect_wav(project / "audio/narration.wav", "旁白总轨"))
     if require_video:
         errors.extend(inspect_wav(project / "audio/score.wav", "背景音乐与事件音轨"))
-        if not (project / "renders/final.mp4").exists():
-            errors.append("缺少 renders/final.mp4")
+        narration_seconds = wav_duration(project / "audio/narration.wav")
+        score_seconds = wav_duration(project / "audio/score.wav")
+        if narration_seconds and score_seconds < narration_seconds - 0.5:
+            errors.append(
+                f"背景音乐没有覆盖全片：背景 {score_seconds:.1f}s，旁白时间轴 {narration_seconds:.1f}s"
+            )
+        errors.extend(inspect_video_audio(project / "renders/final.mp4"))
     return errors
 
 
