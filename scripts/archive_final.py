@@ -43,6 +43,10 @@ def main() -> None:
     output = destination / f"{number:03d}_{clean_name(args.title)}.mp4"
     shutil.copy2(project / "renders/final.mp4", output)
     print(output)
+    publish_output = destination / f"{number:03d}_{clean_name(args.title)}_简介.txt"
+    publish_text = (project / "publish.md").read_text(encoding="utf-8")
+    publish_output.write_text(publish_text, encoding="utf-8")
+    print(publish_output)
 
 
 if __name__ == "__main__":

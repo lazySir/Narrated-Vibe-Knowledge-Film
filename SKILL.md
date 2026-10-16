@@ -40,6 +40,10 @@ and sound all share one timeline. Deliver a project folder and a numbered MP4 in
 7. Keep a quiet background music bed present for the whole film. Narration is
    always the foreground. Use sparse instrumental textures without vocals,
    busy drums, harsh high frequencies, or dense competing melodies.
+8. Every finished film must include `publish.md`: a ready-to-post Chinese
+   introduction followed by one to five relevant hashtags. It should state the
+   concrete dilemma or question, preserve the film's factual boundary, avoid
+   spoiling the full explanation, and invite a specific comment or choice.
 
 ## Workflow
 
@@ -121,12 +125,16 @@ use the script defaults unless they explicitly request a different sound.
 
 ### 7. Commercial preflight and delivery
 
+Write `publish.md` before preflight. Keep it concise and natural for Douyin.
+Use no more than five `#话题`; never pad the list with unrelated trending tags.
+
 Run `scripts/preflight_release.py`. Stop final delivery if any asset has a
 missing source, unknown license, non-commercial restriction, or unapproved
 voice identity.
 
-Use `scripts/archive_final.py`. It copies the finished file into the ignored
-`成品/` directory as `NNN_标题.mp4`, choosing the next available sequence number.
+Use `scripts/archive_final.py`. It copies the finished video and introduction
+into the ignored `成品/` directory as `NNN_标题.mp4` and `NNN_标题_简介.txt`,
+choosing the next available sequence number.
 
 Report what was generated, the TTS provider and voice, source/license status,
 verification performed, and any remaining limitation.

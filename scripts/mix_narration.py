@@ -15,10 +15,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="混合旁白、事件音和可选 BGM")
     parser.add_argument("project", type=Path)
     parser.add_argument("--bgm", type=Path)
-    parser.add_argument("--bgm-db", type=float, default=-22.0,
-                        help="外部 BGM 增益；默认 -22 dB，避免盖住旁白")
-    parser.add_argument("--score-db", type=float, default=-12.0,
-                        help="合成背景音乐与事件音增益；默认 -12 dB")
+    parser.add_argument("--bgm-db", type=float, default=-18.0,
+                        help="外部 BGM 增益；默认 -18 dB")
+    parser.add_argument("--score-db", type=float, default=-6.5,
+                        help="合成背景音乐与事件音增益；默认 -6.5 dB，保持可听")
     args = parser.parse_args()
     project = Path(os.path.abspath(args.project))
     raw = project / "renders/raw.mp4"
@@ -33,10 +33,10 @@ def main() -> None:
         raise SystemExit(
             f"缺少全程背景音乐：{score}。请先运行 engine/audio.py <工程> --wav-only。"
         )
-    if args.bgm_db > -18:
-        raise SystemExit("为避免盖住旁白，--bgm-db 不能高于 -18 dB。建议保留默认 -22 dB。")
-    if args.score_db > -9:
-        raise SystemExit("为避免事件音和底乐盖住旁白，--score-db 不能高于 -9 dB。")
+    if args.bgm_db > -14:
+        raise SystemExit("为避免盖住旁白，--bgm-db 不能高于 -14 dB。建议保留默认 -18 dB。")
+    if args.score_db > -4.5:
+        raise SystemExit("为避免事件音和底乐盖住旁白，--score-db 不能高于 -4.5 dB。")
 
     cmd = [ffmpeg(), "-v", "error", "-y", "-i", str(raw), "-i", str(narration)]
     background_indices = []
@@ -64,7 +64,7 @@ def main() -> None:
         # 人声出现时背景平滑下压；停顿时缓慢回升，避免忽大忽小。
         pieces.append(
             "[bg][voice_sc]sidechaincompress="
-            "threshold=0.015:ratio=10:attack=15:release=650[ducked]"
+            "threshold=0.02:ratio=5.5:attack=18:release=550[ducked]"
         )
         pieces.append("[voice_mix][ducked]amix=inputs=2:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[a]")
         filter_graph = ";".join(pieces)

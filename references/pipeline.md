@@ -8,6 +8,7 @@ projects/001_标题/
 ├── license-manifest.json
 ├── facts.md
 ├── script.md
+├── publish.md
 ├── storyboard.md
 ├── narration.json
 ├── pronunciation.json
@@ -69,6 +70,9 @@ projects/001_标题/
 }
 ```
 
+`publish.md` 保存可直接发布的中文简介，正文之后附一到五个相关 `#话题`。
+发布预检会拒绝缺少简介、仍是模板、没有话题或超过五个话题的工程。
+
 ## 建工程
 
 ```powershell
@@ -124,10 +128,12 @@ projects/001_标题/
 ./.venv/Scripts/python.exe scripts/archive_final.py projects/001_标题 --title "标题"
 ```
 
+归档会同时生成 `NNN_标题.mp4` 和 `NNN_标题_简介.txt`。
+
 `engine/audio.py --wav-only` 根据事件表生成覆盖全片的 `audio/score.wav`。它是必需的，
 所以默认不会生成只有人声、没有音乐的成片。混音脚本会先稳定旁白响度，再把合成底乐
-降到 -12 dB；若提供外部 `--bgm`，默认降到 -22 dB。所有背景层在人声出现时都会
+降到 -6.5 dB；若提供外部 `--bgm`，默认降到 -18 dB。所有背景层在人声出现时都会
 自动平滑降低，停顿时缓慢回升。普通使用直接运行命令即可，不需要自己理解或填写音频参数。
 
 外部 BGM 应选择无歌词、节奏稀疏、没有密集鼓点和尖锐高频的器乐。脚本会拒绝高于
--18 dB 的外部 BGM 和高于 -9 dB 的合成底乐设置。最终文件才会进入 `成品/`。
+-14 dB 的外部 BGM 和高于 -4.5 dB 的合成底乐设置。最终文件才会进入 `成品/`。

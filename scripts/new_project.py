@@ -101,6 +101,12 @@ def main() -> None:
     })
     (project / "facts.md").write_text("# 事实表\n\n| 事实 | 来源 | 把握 | 用在何处 |\n|---|---|---|---|\n", encoding="utf-8")
     (project / "script.md").write_text(f"# 《{args.title}》旁白稿\n\n", encoding="utf-8")
+    (project / "publish.md").write_text(
+        "# 发布简介\n\n"
+        "写一段不剧透核心结论、能让观众理解问题并愿意评论的简介。\n\n"
+        "#知识科普\n",
+        encoding="utf-8",
+    )
     (project / "storyboard.md").write_text(
         "# 分镜表\n\n| ID | 旁白 | 屏上主体 | 动作 | 景别 | 关键词时刻 | 观众理解 | 声音 | 来源 |\n"
         "|---|---|---|---|---|---|---|---|---|\n",

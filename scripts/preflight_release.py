@@ -102,6 +102,20 @@ def inspect(project: Path, require_video=True):
     for required in ("facts.md", "storyboard.md", "timeline.json", "subtitles.srt"):
         if not (project / required).exists():
             errors.append(f"缺少 {required}")
+    publish = project / "publish.md"
+    if not publish.exists():
+        errors.append("缺少 publish.md，成片必须附带发布简介")
+    else:
+        publish_text = publish.read_text(encoding="utf-8").strip()
+        if len(publish_text) < 40:
+            errors.append("publish.md 内容太短，尚未形成可发布的简介")
+        if "写一段不剧透" in publish_text:
+            errors.append("publish.md 仍是初始模板")
+        hashtags = re.findall(r"(?<!\w)#[\w\u4e00-\u9fff]+", publish_text)
+        if not hashtags:
+            errors.append("publish.md 至少需要一个 #话题")
+        if len(hashtags) > 5:
+            errors.append(f"publish.md 有 {len(hashtags)} 个 #话题，最多只能有 5 个")
     errors.extend(inspect_wav(project / "audio/narration.wav", "旁白总轨"))
     if require_video:
         errors.extend(inspect_wav(project / "audio/score.wav", "背景音乐与事件音轨"))
