@@ -23,6 +23,12 @@ if hasattr(sys.stdout, "reconfigure"):
 D3 = 146.83
 PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21]           # 大调五声，嗒声从这里取音高
 CHORD = [0, 7, 12, 14, 19, 24, 26]                   # 根音、五度、八度、九度…… 叠成"开阔"的和弦
+MUSIC_PRESETS = {
+    "night-tech": dict(root=0, scale=PENTA, chord=CHORD, drone=.050, bpm=0, pulse=.0),
+    "social-tension": dict(root=-2, scale=[0, 2, 3, 5, 7, 8, 10, 12, 15, 17], chord=[0, 3, 7, 10, 14, 19, 22], drone=.042, bpm=76, pulse=.024),
+    "math-clarity": dict(root=2, scale=[0, 2, 4, 7, 9, 12, 14, 16], chord=[0, 4, 7, 12, 16, 19, 24], drone=.034, bpm=92, pulse=.018),
+    "fable-warm": dict(root=5, scale=[0, 2, 4, 7, 9, 12, 14, 16], chord=[0, 4, 7, 12, 16, 19], drone=.030, bpm=68, pulse=.014),
+}
 
 def hz(semi, base=D3): return base * 2 ** (semi / 12)
 def env_exp(n, tau, attack=0.004):
@@ -47,7 +53,8 @@ def tone(f, dur, tau, partials=((1, 1.0),), attack=0.004, vib=0.0):
     return out * np.minimum(1, t / attack)
 
 def ev_tick(rng, p):
-    f = hz(PENTA[int(p.get("pitch", 0)) % len(PENTA)] + 24)
+    scale = p.get("_scale", PENTA)
+    f = hz(scale[int(p.get("pitch", 0)) % len(scale)] + 24)
     x = tone(f, .5, .09, ((1, 1), (2.01, .28), (3.02, .1)), attack=.002)
     click = highpass(rng.standard_normal(int(.012 * SR)) * env_exp(int(.012 * SR), .003), 3000) * .25
     x[:len(click)] += click
@@ -56,14 +63,15 @@ def ev_soft(rng, p):
     return pan(tone(hz(12 + 7), 2.2, .7, ((1, 1), (2, .2)), attack=.03) * .12 * p.get("gain", 1), 0)
 def ev_chord(rng, p):
     root = p.get("root", 0); n = int(9 * SR); out = np.zeros((n, 2))
-    for k, semi in enumerate(CHORD):
+    chord = p.get("_chord", CHORD)
+    for k, semi in enumerate(chord):
         f = hz(root + semi); x = tone(f, 9, 2.6 - k * .12, ((1, 1), (2.003, .32), (3.01, .14), (4.02, .06)), attack=.012, vib=.6)
         out += pan(x * (.11 / (1 + k * .22)), (k % 3 - 1) * .5)
     sub = tone(hz(root - 12), 6, 2.2, ((1, 1),), attack=.02)
     out[:len(sub)] += pan(sub * .16, 0)
     return out * p.get("gain", 1)
 def ev_bloom(rng, p):                                 # 闪白：和弦 + 一口气的噪声扫过
-    out = ev_chord(rng, {"root": p.get("root", 0), "gain": 1.15 * p.get("gain", 1)})
+    out = ev_chord(rng, {"root": p.get("root", 0), "gain": 1.15 * p.get("gain", 1), "_chord": p.get("_chord", CHORD)})
     n = int(1.6 * SR); ns = rng.standard_normal((n, 2)) * env_exp(n, .35, .01)[:, None]
     out[:n] += lowpass(highpass(ns, 500), 7000) * .12
     return out
@@ -99,16 +107,26 @@ def reverb(x, rng, t60=3.6, wet=.42):
 
 def synth(spec, bgm=False):
     end = spec["end"]; meta = spec.get("meta") or {}; n = int((end + .05) * SR); rng = np.random.default_rng(20261006)
-    dry = np.zeros((n, 2)); t = np.arange(n) / SR; root = meta.get("root", 0)
+    preset = MUSIC_PRESETS.get(meta.get("music_preset", "night-tech"), MUSIC_PRESETS["night-tech"])
+    dry = np.zeros((n, 2)); t = np.arange(n) / SR; root = meta.get("root", preset["root"])
     hush = [(when, when + p.get("dur", 2.5)) for when, name, p in spec["events"] if name == "hush"]
     for when, name, p in spec["events"]:
-        if name in EV: add(dry, EV[name](rng, dict(p, root=p.get("root", 0) + root) if name in ("chord", "bloom") else p), when)
+        if name in EV:
+            params = dict(p, _scale=preset["scale"], _chord=preset["chord"])
+            if name in ("chord", "bloom"): params["root"] = p.get("root", 0) + root
+            add(dry, EV[name](rng, params), when)
     out = reverb(dry, rng)
     if not bgm:                                       # 低频长音垫底：两个略微失谐的正弦 + 很慢的呼吸
-        lv = .05 * meta.get("drone", 1)
+        lv = preset["drone"] * meta.get("drone", 1)
         d = (np.sin(2 * np.pi * hz(root - 24) * t) + .6 * np.sin(2 * np.pi * hz(root - 24 + .08) * 2 * t) + .25 * np.sin(2 * np.pi * hz(root - 12 + 7) * t)) * (.75 + .25 * np.sin(2 * np.pi * t / 11))
         air = lowpass(highpass(rng.standard_normal(n), 300), 1800) * .012 * (.6 + .4 * np.sin(2 * np.pi * t / 17))
         out += np.stack([d * lv + air, d * lv + np.roll(air, 4000)], 1)
+        if preset["bpm"]:
+            beat = 60 / preset["bpm"]
+            for bt in np.arange(.8, end, beat):
+                m = int(.12 * SR); tt = np.arange(m) / SR
+                click = np.sin(2 * np.pi * hz(root + 12) * tt) * env_exp(m, .035, .002)
+                add(out, pan(click * preset["pulse"], -.18 if int(bt / beat) % 2 else .18), bt)
     for a, b, k in meta.get("noise", []):             # 文案说到噪声，配乐里就真的有噪声
         g = np.clip((t - a) / max(.01, b - a), 0, 1) ** 1.5 * (t <= b) * k
         out += lowpass(highpass(rng.standard_normal((n, 2)), 200), 6000) * (g * .12)[:, None]

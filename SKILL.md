@@ -40,6 +40,10 @@ and sound all share one timeline. Deliver a project folder and a numbered MP4 in
 7. Keep a quiet background music bed present for the whole film. Narration is
    always the foreground. Use sparse instrumental textures without vocals,
    busy drums, harsh high frequencies, or dense competing melodies.
+   Select a programmatic preset that matches the subject: `night-tech` for
+   science and AI, `social-tension` for social rules and public disputes,
+   `math-clarity` for probability and logic, and `fable-warm` for
+   character-led stories. Do not reuse one sonic palette for every film.
 8. Every finished film must include `publish.md`: a ready-to-post Chinese
    introduction followed by one to five relevant hashtags. It should state the
    concrete dilemma or question, preserve the film's factual boundary, avoid
@@ -111,7 +115,7 @@ run `engine/audio.py <project> --wav-only` and use `scripts/mix_narration.py` to
 mix narration, event sound, and optional BGM.
 Speech is the reference layer. Always generate `audio/score.wav`; do not deliver
 a narration-only film. Use the safe defaults in `mix_narration.py`: normalize
-speech first, keep the generated score low, keep optional BGM lower still, and
+speech first, keep the generated score clearly audible, keep optional BGM lower still, and
 duck all background layers smoothly whenever speech is present. During speech
 pauses the bed may rise gently but must not jump in level. A dramatic hush means
 very quiet background, not digital silence. Do not stretch narration merely to

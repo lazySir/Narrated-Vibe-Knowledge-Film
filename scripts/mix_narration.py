@@ -17,8 +17,8 @@ def main() -> None:
     parser.add_argument("--bgm", type=Path)
     parser.add_argument("--bgm-db", type=float, default=-14.0,
                         help="外部 BGM 增益；默认 -14 dB")
-    parser.add_argument("--score-db", type=float, default=-1.5,
-                        help="合成背景音乐与事件音增益；默认 -1.5 dB，保持明显可听")
+    parser.add_argument("--score-db", type=float, default=0.0,
+                        help="合成背景音乐与事件音增益；默认 0 dB，保持清楚可听")
     args = parser.parse_args()
     project = Path(os.path.abspath(args.project))
     raw = project / "renders/raw.mp4"
@@ -64,7 +64,7 @@ def main() -> None:
         # 人声出现时背景平滑下压；停顿时缓慢回升，避免忽大忽小。
         pieces.append(
             "[bg][voice_sc]sidechaincompress="
-            "threshold=0.08:ratio=2.5:attack=20:release=420[ducked]"
+            "threshold=0.08:ratio=2.2:attack=20:release=360[ducked]"
         )
         pieces.append("[voice_mix][ducked]amix=inputs=2:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[a]")
         filter_graph = ";".join(pieces)
