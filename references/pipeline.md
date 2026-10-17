@@ -128,7 +128,7 @@ projects/001_标题/
 ./.venv/Scripts/python.exe scripts/archive_final.py projects/001_标题 --title "标题"
 ```
 
-每个工程还必须独立创作 `cover.jpg`：固定为 1440×2560 的 9:16 高清竖图，禁止从成片
+每个工程还必须独立创作 `cover.jpg`：固定为 1080×1920 的 9:16 高清竖图，禁止从成片
 截图。封面应以手机端小图可读为准，只保留一个清楚的冲突，使用醒目的简体中文大字，
 并检查所有文字和数字。导出高质量 JPEG，避免重度压缩或放大低清截图。生成来源及商用
 状态写入 `license-manifest.json`。

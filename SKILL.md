@@ -133,8 +133,8 @@ Write `publish.md` before preflight. Keep it concise and natural for Douyin.
 Use no more than five `#话题`; never pad the list with unrelated trending tags.
 
 Create a separate `cover.jpg` for every finished film. The cover is a new,
-standalone 9:16 portrait artwork at 1440×2560; never use a frame captured from
-the video. Design it for small-screen recognition with one clear conflict,
+standalone 9:16 portrait artwork at exactly 1080×1920; never use a frame captured
+from the video. Design it for small-screen recognition with one clear conflict,
 large readable Simplified Chinese, strong subject separation, and safe margins.
 Keep the headline concise, verify every character and numeral, and avoid logos,
 watermarks, clutter, or unsupported claims. Export a high-quality JPEG without
