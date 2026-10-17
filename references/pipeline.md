@@ -128,7 +128,12 @@ projects/001_标题/
 ./.venv/Scripts/python.exe scripts/archive_final.py projects/001_标题 --title "标题"
 ```
 
-归档会同时生成 `NNN_标题.mp4` 和 `NNN_标题_简介.txt`。
+每个工程还必须独立创作 `cover.jpg`：固定为 1080×1920 的 9:16 竖图，禁止从成片
+截图。封面应以手机端小图可读为准，只保留一个清楚的冲突，使用醒目的简体中文大字，
+并检查所有文字和数字。生成来源及商用状态写入 `license-manifest.json`。
+
+归档会同时生成 `NNN_标题.mp4`、`NNN_标题_封面.jpg` 和
+`NNN_标题_简介.txt`。
 
 `engine/audio.py --wav-only` 根据事件表生成覆盖全片的 `audio/score.wav`。它是必需的，
 所以默认不会生成只有人声、没有音乐的成片。混音脚本会先稳定旁白响度，再把合成底乐

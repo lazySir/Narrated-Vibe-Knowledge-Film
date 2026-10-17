@@ -9,6 +9,7 @@ from pathlib import Path
 
 import numpy as np
 import soundfile as sf
+from PIL import Image
 
 from runtime import ffmpeg
 
@@ -116,6 +117,18 @@ def inspect(project: Path, require_video=True):
             errors.append("publish.md 至少需要一个 #话题")
         if len(hashtags) > 5:
             errors.append(f"publish.md 有 {len(hashtags)} 个 #话题，最多只能有 5 个")
+    cover = project / "cover.jpg"
+    if not cover.exists():
+        errors.append("缺少独立创作的竖版封面 cover.jpg")
+    else:
+        try:
+            with Image.open(cover) as image:
+                if image.size != (1080, 1920):
+                    errors.append(
+                        f"cover.jpg 必须是 1080×1920 的 9:16 竖图，当前为 {image.width}×{image.height}"
+                    )
+        except Exception as exc:
+            errors.append(f"cover.jpg 无法读取：{exc}")
     errors.extend(inspect_wav(project / "audio/narration.wav", "旁白总轨"))
     if require_video:
         errors.extend(inspect_wav(project / "audio/score.wav", "背景音乐与事件音轨"))

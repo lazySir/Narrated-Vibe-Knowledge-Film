@@ -132,13 +132,22 @@ use the script defaults unless they explicitly request a different sound.
 Write `publish.md` before preflight. Keep it concise and natural for Douyin.
 Use no more than five `#话题`; never pad the list with unrelated trending tags.
 
+Create a separate `cover.jpg` for every finished film. The cover is a new,
+standalone 9:16 portrait artwork at 1080×1920; never use a frame captured from
+the video. Design it for small-screen recognition with one clear conflict,
+large readable Simplified Chinese, strong subject separation, and safe margins.
+Keep the headline concise, verify every character and numeral, and avoid logos,
+watermarks, clutter, or unsupported claims. Record the generated cover and its
+commercial-use status in `license-manifest.json`.
+
 Run `scripts/preflight_release.py`. Stop final delivery if any asset has a
 missing source, unknown license, non-commercial restriction, or unapproved
 voice identity.
 
-Use `scripts/archive_final.py`. It copies the finished video and introduction
-into the ignored `成品/` directory as `NNN_标题.mp4` and `NNN_标题_简介.txt`,
-choosing the next available sequence number.
+Use `scripts/archive_final.py`. It copies the finished video, independently
+created portrait cover, and introduction into the ignored `成品/` directory as
+`NNN_标题.mp4`, `NNN_标题_封面.jpg`, and `NNN_标题_简介.txt`, choosing the next
+available sequence number.
 
 Report what was generated, the TTS provider and voice, source/license status,
 verification performed, and any remaining limitation.

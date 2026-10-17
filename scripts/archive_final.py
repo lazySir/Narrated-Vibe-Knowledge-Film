@@ -43,6 +43,9 @@ def main() -> None:
     output = destination / f"{number:03d}_{clean_name(args.title)}.mp4"
     shutil.copy2(project / "renders/final.mp4", output)
     print(output)
+    cover_output = destination / f"{number:03d}_{clean_name(args.title)}_封面.jpg"
+    shutil.copy2(project / "cover.jpg", cover_output)
+    print(cover_output)
     publish_output = destination / f"{number:03d}_{clean_name(args.title)}_简介.txt"
     publish_text = (project / "publish.md").read_text(encoding="utf-8")
     publish_output.write_text(publish_text, encoding="utf-8")
