@@ -123,9 +123,9 @@ def inspect(project: Path, require_video=True):
     else:
         try:
             with Image.open(cover) as image:
-                if image.size != (1080, 1920):
+                if image.size != (1440, 2560):
                     errors.append(
-                        f"cover.jpg 必须是 1080×1920 的 9:16 竖图，当前为 {image.width}×{image.height}"
+                        f"cover.jpg 必须是 1440×2560 的 9:16 高清竖图，当前为 {image.width}×{image.height}"
                     )
         except Exception as exc:
             errors.append(f"cover.jpg 无法读取：{exc}")
